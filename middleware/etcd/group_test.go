@@ -19,8 +19,8 @@ import (
 
 func TestGroupLookup(t *testing.T) {
 	for _, serv := range servicesGroup {
-		set(t, etc, serv.Key, 0, serv)
-		defer delete(t, etc, serv.Key)
+		Set(t, etc, serv.Key, 0, serv)
+		defer Delete(t, etc, serv.Key)
 	}
 	for _, tc := range dnsTestCasesGroup {
 		m := tc.Msg()

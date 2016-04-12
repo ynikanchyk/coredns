@@ -40,6 +40,7 @@ func (e Etcd) updateStubZones() {
 			}
 			ip := net.ParseIP(serv.Host)
 			if ip == nil {
+				// TODO log.Print WARNING
 				continue
 			}
 
@@ -53,6 +54,7 @@ func (e Etcd) updateStubZones() {
 				// and drop the right most labels that belong to zone.
 				domain = dns.Fqdn(strings.Join(labels[1:len(labels)-dns.CountLabel(z)], "."))
 				if domain == z {
+					// log.PRINTf WARNING no zone found?
 					continue
 				}
 				nameservers[domain] = append(nameservers[domain], net.JoinHostPort(serv.Host, strconv.Itoa(serv.Port)))

@@ -17,8 +17,8 @@ import (
 // Check the ordering of returned cname.
 func TestCnameLookup(t *testing.T) {
 	for _, serv := range servicesCname {
-		set(t, etc, serv.Key, 0, serv)
-		defer delete(t, etc, serv.Key)
+		Set(t, etc, serv.Key, 0, serv)
+		defer Delete(t, etc, serv.Key)
 	}
 	for _, tc := range dnsTestCasesCname {
 		m := tc.Msg()

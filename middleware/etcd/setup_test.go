@@ -28,6 +28,10 @@ var (
 )
 
 func init() {
+	Init()
+}
+
+func Init() {
 	ctx, _ = context.WithTimeout(context.Background(), etcdTimeout)
 
 	etcdCfg := etcdc.Config{
@@ -44,7 +48,7 @@ func init() {
 	}
 }
 
-func set(t *testing.T, e Etcd, k string, ttl time.Duration, m *msg.Service) {
+func Set(t *testing.T, e Etcd, k string, ttl time.Duration, m *msg.Service) {
 	b, err := json.Marshal(m)
 	if err != nil {
 		t.Fatal(err)
@@ -53,15 +57,15 @@ func set(t *testing.T, e Etcd, k string, ttl time.Duration, m *msg.Service) {
 	e.Client.Set(ctx, path, string(b), &etcdc.SetOptions{TTL: ttl})
 }
 
-func delete(t *testing.T, e Etcd, k string) {
+func Delete(t *testing.T, e Etcd, k string) {
 	path, _ := e.PathWithWildcard(k)
 	e.Client.Delete(ctx, path, &etcdc.DeleteOptions{Recursive: false})
 }
 
 func TestLookup(t *testing.T) {
 	for _, serv := range services {
-		set(t, etc, serv.Key, 0, serv)
-		defer delete(t, etc, serv.Key)
+		Set(t, etc, serv.Key, 0, serv)
+		defer Delete(t, etc, serv.Key)
 	}
 	for _, tc := range dnsTestCases {
 		m := tc.Msg()

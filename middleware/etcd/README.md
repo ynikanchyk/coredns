@@ -36,4 +36,9 @@ etcd [zones...] {
 * `upstream` upstream resolvers to be used resolve external names found in etcd.
 * `tls` followed the cert, key and the CA's cert filenames.
 
+### Stubzones
+
+Only the first configured domain (primary domain) will be used for stubzone lookups.
+
+
 ## Examples

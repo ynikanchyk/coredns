@@ -1,12 +1,9 @@
 // +build etcd
 
-// tests mx and txt records
-
 package etcd
 
+// tests mx and txt records
 // etcd needs to be running on http://127.0.0.1:2379
-// *and* needs connectivity to the internet for remotely resolving
-// names.
 
 import (
 	"sort"
@@ -21,8 +18,8 @@ import (
 
 func TestOtherLookup(t *testing.T) {
 	for _, serv := range servicesOther {
-		set(t, etc, serv.Key, 0, serv)
-		defer delete(t, etc, serv.Key)
+		Set(t, etc, serv.Key, 0, serv)
+		defer Delete(t, etc, serv.Key)
 	}
 	for _, tc := range dnsTestCasesOther {
 		m := tc.Msg()

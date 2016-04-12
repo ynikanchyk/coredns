@@ -22,8 +22,8 @@ func TestMultiLookup(t *testing.T) {
 	etcMulti.Next = test.ErrorHandler()
 
 	for _, serv := range servicesMulti {
-		set(t, etcMulti, serv.Key, 0, serv)
-		defer delete(t, etcMulti, serv.Key)
+		Set(t, etcMulti, serv.Key, 0, serv)
+		defer Delete(t, etcMulti, serv.Key)
 	}
 	for _, tc := range dnsTestCasesMulti {
 		m := tc.Msg()
