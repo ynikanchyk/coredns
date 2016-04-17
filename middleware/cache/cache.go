@@ -49,21 +49,21 @@ func NewCache(next middleware.Handler) Cache {
 	return Cache{Next: next, cache: gcache.New(defaultDuration, purgeDuration)}
 }
 
-type MessageType int
+type messageType int
 
 const (
-	Success    MessageType = iota
-	NameError              // NXDOMAIN in header, SOA in auth.
-	NoData                 // NOERROR in header, SOA in auth.
-	OtherError             // Don't cache these
+	success    messageType = iota
+	nameError              // NXDOMAIN in header, SOA in auth.
+	noData                 // NOERROR in header, SOA in auth.
+	otherError             // Don't cache these.
 )
 
 // classify classifies a message, it returns the MessageType.
-func classify(m *dns.Msg) (MessageType, *dns.OPT) {
+func classify(m *dns.Msg) (messageType, *dns.OPT) {
 	opt := m.IsEdns0()
 	soa := false
 	if m.Rcode == dns.RcodeSuccess {
-		return Success, opt
+		return success, opt
 	}
 	for _, r := range m.Ns {
 		if r.Header().Rrtype == dns.TypeSOA {
@@ -74,16 +74,16 @@ func classify(m *dns.Msg) (MessageType, *dns.OPT) {
 
 	// Check length of different section, and drop stuff that is just to large.
 	if soa && m.Rcode == dns.RcodeSuccess {
-		return NoData, opt
+		return noData, opt
 	}
 	if soa && m.Rcode == dns.RcodeNameError {
-		return NameError, opt
+		return nameError, opt
 	}
 
-	return OtherError, opt
+	return otherError, opt
 }
 
-func cacheKey(m *dns.Msg, t MessageType, do bool) string {
+func cacheKey(m *dns.Msg, t messageType, do bool) string {
 	if m.Truncated {
 		return ""
 	}
@@ -91,13 +91,13 @@ func cacheKey(m *dns.Msg, t MessageType, do bool) string {
 	qtype := m.Question[0].Qtype
 	qname := strings.ToLower(m.Question[0].Name)
 	switch t {
-	case Success:
+	case success:
 		return successKey(qname, qtype, do)
-	case NameError:
+	case nameError:
 		return nameErrorKey(qname, do)
-	case NoData:
+	case noData:
 		return noDataKey(qname, qtype, do)
-	case OtherError:
+	case otherError:
 		return ""
 	}
 	return ""
@@ -123,11 +123,11 @@ func (c *CachingResponseWriter) WriteMsg(res *dns.Msg) error {
 	if key != "" {
 		i := newItem(res)
 		switch mt {
-		case Success:
-			duration := MinTtl(res.Answer, mt)
+		case success:
+			duration := minTtl(res.Answer, mt)
 			c.cache.Set(key, i, duration)
-		case NameError, NoData:
-			duration := MinTtl(res.Ns, mt)
+		case nameError, noData:
+			duration := minTtl(res.Ns, mt)
 			c.cache.Set(key, i, duration)
 		}
 	}
@@ -146,19 +146,19 @@ func (c *CachingResponseWriter) Hijack() {
 	return
 }
 
-func MinTtl(rrs []dns.RR, mt MessageType) time.Duration {
-	if mt != Success || mt != NameError || mt != NoData {
+func minTtl(rrs []dns.RR, mt messageType) time.Duration {
+	if mt != success || mt != nameError || mt != noData {
 		return 0
 	}
 
 	minTtl := maxTtl
 	for _, r := range rrs {
 		switch mt {
-		case Success:
+		case success:
 			if r.Header().Rrtype == dns.TypeSOA {
 				return time.Duration(r.(*dns.SOA).Minttl) * time.Second
 			}
-		case NameError, NoData:
+		case nameError, noData:
 			if r.Header().Ttl < minTtl {
 				minTtl = r.Header().Ttl
 			}

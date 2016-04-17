@@ -1,8 +1,12 @@
 package cache
 
-import "github.com/miekg/dns"
+import (
+	"strconv"
 
-type Item struct {
+	"github.com/miekg/dns"
+)
+
+type item struct {
 	Authoritative      bool
 	AuthenticatedData  bool
 	RecursionAvailable bool
@@ -11,8 +15,8 @@ type Item struct {
 	Extra              []dns.RR
 }
 
-func newItem(m *dns.Msg) *Item {
-	i := new(Item)
+func newItem(m *dns.Msg) *item {
+	i := new(item)
 	i.Authoritative = m.Authoritative
 	i.AuthenticatedData = m.AuthenticatedData
 	i.RecursionAvailable = m.RecursionAvailable
@@ -24,7 +28,7 @@ func newItem(m *dns.Msg) *Item {
 }
 
 // toMsg turns i into a message, it tailers to reply to m.
-func (i *Item) toMsg(m *dns.Msg) *dns.Msg {
+func (i *item) toMsg(m *dns.Msg) *dns.Msg {
 	m1 := new(dns.Msg)
 	m1.SetReply(m)
 	m1.Authoritative = i.Authoritative
@@ -38,3 +42,22 @@ func (i *Item) toMsg(m *dns.Msg) *dns.Msg {
 
 	return m1
 }
+
+// nodataKey returns a caching key for NODATA responses.
+func noDataKey(qname string, qtype uint16, do bool) string {
+	if do {
+		return "1" + qname + ".." + strconv.Itoa(int(qtype))
+	}
+	return "0" + qname + ".." + strconv.Itoa(int(qtype))
+}
+
+// nameErrorKey returns a caching key for NXDOMAIN responses.
+func nameErrorKey(qname string, do bool) string {
+	if do {
+		return "1" + qname
+	}
+	return "0" + qname
+}
+
+// successKey returns a caching key for successfull answers.
+func successKey(qname string, qtype uint16, do bool) string { return noDataKey(qname, qtype, do) }

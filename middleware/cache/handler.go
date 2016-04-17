@@ -19,14 +19,14 @@ func (c Cache) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (
 
 	nxdomain := nameErrorKey(name, do)
 	if i, ok := c.cache.Get(nxdomain); ok {
-		resp := i.(*Item).toMsg(r)
+		resp := i.(*item).toMsg(r)
 		w.WriteMsg(resp)
 		return dns.RcodeSuccess, nil
 	}
 
 	successOrNoData := successKey(name, qtype, do)
 	if i, ok := c.cache.Get(successOrNoData); ok {
-		resp := i.(*Item).toMsg(r)
+		resp := i.(*item).toMsg(r)
 		w.WriteMsg(resp)
 		return dns.RcodeSuccess, nil
 	}
