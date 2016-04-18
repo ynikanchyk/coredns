@@ -1,12 +1,12 @@
 package cache
 
 /*
-The idea behind this implementation is as follows.  We keep a 2 small cache
-withs Items that are indexed:
+The idea behind this implementation is as follows. We have a cache that is index
+by a couple different keys, which allows use to have:
 
-- negative cache: bit with qname only for NXDOMAIN responses
-- negative cache: bit qname + qtype for NODATA responses
-- positive cache: bit qname + qtype for succesful responses.
+- negative cache: qname only for NXDOMAIN responses
+- negative cache: qname + qtype for NODATA responses
+- positive cache: qname + qtype for succesful responses.
 
 We track DNSSEC responses separately, i.e. under a different cache key.
 Each Item stored contains the message split up in the different sections
@@ -23,14 +23,13 @@ If found a return packet is assembled and returned to the client. Taking size an
 constraints into account.
 
 We also need to track if the answer received was an authoritative answer, ad bit and other
-setting, for this we also store the header bits.
+setting, for this we also store a few header bits.
 
 For the positive cache we use the same idea. Truncated responses are never stored.
 */
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"github.com/miekg/coredns/middleware"
@@ -89,7 +88,7 @@ func cacheKey(m *dns.Msg, t messageType, do bool) string {
 	}
 
 	qtype := m.Question[0].Qtype
-	qname := strings.ToLower(m.Question[0].Name)
+	qname := middleware.Name(m.Question[0].Name).Normalize()
 	switch t {
 	case success:
 		return successKey(qname, qtype, do)
@@ -121,13 +120,14 @@ func (c *CachingResponseWriter) WriteMsg(res *dns.Msg) error {
 
 	key := cacheKey(res, mt, do)
 	if key != "" {
-		i := newItem(res)
 		switch mt {
 		case success:
 			duration := minTtl(res.Answer, mt)
+			i := newItem(res, duration)
 			c.cache.Set(key, i, duration)
 		case nameError, noData:
 			duration := minTtl(res.Ns, mt)
+			i := newItem(res, duration)
 			c.cache.Set(key, i, duration)
 		}
 	}

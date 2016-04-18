@@ -2,6 +2,7 @@ package cache
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/miekg/dns"
 )
@@ -10,12 +11,13 @@ type item struct {
 	Authoritative      bool
 	AuthenticatedData  bool
 	RecursionAvailable bool
+	origTtl            uint32
 	Answer             []dns.RR
 	Ns                 []dns.RR
 	Extra              []dns.RR
 }
 
-func newItem(m *dns.Msg) *item {
+func newItem(m *dns.Msg, d time.Duration) *item {
 	i := new(item)
 	i.Authoritative = m.Authoritative
 	i.AuthenticatedData = m.AuthenticatedData
@@ -23,6 +25,7 @@ func newItem(m *dns.Msg) *item {
 	i.Answer = m.Answer
 	i.Ns = m.Ns
 	i.Extra = m.Extra
+	i.origTtl = uint32(d.Seconds())
 
 	return i
 }
@@ -39,6 +42,7 @@ func (i *item) toMsg(m *dns.Msg) *dns.Msg {
 	m1.Answer = i.Answer
 	m1.Ns = i.Ns
 	m1.Extra = i.Extra
+	println(i.origTtl)
 
 	return m1
 }
