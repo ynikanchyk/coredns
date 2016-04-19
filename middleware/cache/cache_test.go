@@ -12,6 +12,7 @@ import (
 
 type cacheTestCase struct {
 	test.Case
+	in                 test.Case
 	AuthenticatedData  bool
 	Authoritative      bool
 	RecursionAvailable bool
@@ -31,6 +32,24 @@ var cacheTestCases = []cacheTestCase{
 				test.MX("miek.nl.	1800	IN	MX	5 alt2.aspmx.l.google.com."),
 			},
 		},
+		in: test.Case{
+			Qname: "miek.nl.", Qtype: dns.TypeMX,
+			Answer: []dns.RR{
+				test.MX("miek.nl.	1800	IN	MX	1 aspmx.l.google.com."),
+				test.MX("miek.nl.	1800	IN	MX	10 aspmx2.googlemail.com."),
+				test.MX("miek.nl.	1800	IN	MX	10 aspmx3.googlemail.com."),
+				test.MX("miek.nl.	1800	IN	MX	5 alt1.aspmx.l.google.com."),
+				test.MX("miek.nl.	1800	IN	MX	5 alt2.aspmx.l.google.com."),
+			},
+		},
+	},
+	{
+		Truncated: true,
+		Case: test.Case{
+			Qname: "miek.nl.", Qtype: dns.TypeMX,
+			Answer: []dns.RR{test.MX("miek.nl.	1800	IN	MX	1 aspmx.l.google.com.")},
+		},
+		in: test.Case{},
 	},
 }
 
@@ -39,8 +58,9 @@ func cacheMsg(m *dns.Msg, tc cacheTestCase) *dns.Msg {
 	m.AuthenticatedData = tc.AuthenticatedData
 	m.Authoritative = tc.Authoritative
 	m.Truncated = tc.Truncated
-	m.Answer = tc.Answer
-	m.Ns = tc.Ns
+	m.Answer = tc.in.Answer
+	m.Ns = tc.in.Ns
+	//	m.Extra = tc.in.Extra , not the OPT record!
 	return m
 }
 
@@ -50,24 +70,43 @@ func newTestCache() (Cache, *CachingResponseWriter) {
 	return c, crr
 }
 
-func TestCacheSetGet(t *testing.T) {
+func TestCache(t *testing.T) {
 	c, crr := newTestCache()
 
 	for _, tc := range cacheTestCases {
-		m := tc.Msg()
+		m := tc.in.Msg()
 		m = cacheMsg(m, tc)
+		do := tc.in.Do
 
 		mt, _ := classify(m)
-		do := tc.Case.Do
 		key := cacheKey(m, mt, do)
 		crr.Set(m, key, mt)
 
 		name := middleware.Name(m.Question[0].Name).Normalize()
 		qtype := m.Question[0].Qtype
+		i, ok := c.Get(name, qtype, do)
+		if !ok && !m.Truncated {
+			t.Errorf("Truncated message should not have been cached")
+		}
 
-		if i, ok := c.Get(name, qtype, do); ok {
+		if ok {
 			resp := i.toMsg(m)
-			t.Logf("%s\n", resp.String())
+
+			if !test.Header(t, tc.Case, resp) {
+				t.Logf("%v\n", resp)
+				continue
+			}
+
+			if !test.Section(t, tc.Case, test.Answer, resp.Answer) {
+				t.Logf("%v\n", resp)
+			}
+			if !test.Section(t, tc.Case, test.Ns, resp.Ns) {
+				t.Logf("%v\n", resp)
+
+			}
+			if !test.Section(t, tc.Case, test.Extra, resp.Extra) {
+				t.Logf("%v\n", resp)
+			}
 		}
 	}
 }
