@@ -41,11 +41,13 @@ import (
 // Cache is middleware that looks up responses in a cache and caches replies.
 type Cache struct {
 	Next  middleware.Handler
+	Zones []string
 	cache *gcache.Cache
+	cap   time.Duration
 }
 
-func NewCache(next middleware.Handler) Cache {
-	return Cache{Next: next, cache: gcache.New(defaultDuration, purgeDuration)}
+func NewCache(ttl int, zones []string, next middleware.Handler) Cache {
+	return Cache{Next: next, Zones: zones, cache: gcache.New(defaultDuration, purgeDuration), cap: time.Duration(ttl) * time.Second}
 }
 
 type messageType int
@@ -105,10 +107,11 @@ func cacheKey(m *dns.Msg, t messageType, do bool) string {
 type CachingResponseWriter struct {
 	dns.ResponseWriter
 	cache *gcache.Cache
+	cap   time.Duration
 }
 
-func NewCachingResponseWriter(w dns.ResponseWriter, cache *gcache.Cache) *CachingResponseWriter {
-	return &CachingResponseWriter{w, cache}
+func NewCachingResponseWriter(w dns.ResponseWriter, cache *gcache.Cache, cap time.Duration) *CachingResponseWriter {
+	return &CachingResponseWriter{w, cache, cap}
 }
 
 func (c *CachingResponseWriter) WriteMsg(res *dns.Msg) error {
@@ -119,20 +122,38 @@ func (c *CachingResponseWriter) WriteMsg(res *dns.Msg) error {
 	}
 
 	key := cacheKey(res, mt, do)
-	if key != "" {
-		switch mt {
-		case success:
-			duration := minTtl(res.Answer, mt)
-			i := newItem(res, duration)
-			c.cache.Set(key, i, duration)
-		case nameError, noData:
-			duration := minTtl(res.Ns, mt)
-			i := newItem(res, duration)
-			c.cache.Set(key, i, duration)
-		}
+	c.Set(res, key, mt)
+
+	if c.cap != 0 {
+		setCap(res, uint32(c.cap.Seconds()))
 	}
 
 	return c.ResponseWriter.WriteMsg(res)
+}
+
+func (c *CachingResponseWriter) Set(m *dns.Msg, key string, mt messageType) {
+	if key == "" {
+		// logger the log? TODO(miek)
+		return
+	}
+
+	duration := c.cap
+	switch mt {
+	case success:
+		if c.cap == 0 {
+			duration = minTtl(m.Answer, mt)
+		}
+		i := newItem(m, duration)
+
+		c.cache.Set(key, i, duration)
+	case nameError, noData:
+		if c.cap == 0 {
+			duration = minTtl(m.Ns, mt)
+		}
+		i := newItem(m, duration)
+
+		c.cache.Set(key, i, duration)
+	}
 }
 
 func (c *CachingResponseWriter) Write(buf []byte) (int, error) {
@@ -147,18 +168,18 @@ func (c *CachingResponseWriter) Hijack() {
 }
 
 func minTtl(rrs []dns.RR, mt messageType) time.Duration {
-	if mt != success || mt != nameError || mt != noData {
+	if mt != success && mt != nameError && mt != noData {
 		return 0
 	}
 
 	minTtl := maxTtl
 	for _, r := range rrs {
 		switch mt {
-		case success:
+		case nameError, noData:
 			if r.Header().Rrtype == dns.TypeSOA {
 				return time.Duration(r.(*dns.SOA).Minttl) * time.Second
 			}
-		case nameError, noData:
+		case success:
 			if r.Header().Ttl < minTtl {
 				minTtl = r.Header().Ttl
 			}

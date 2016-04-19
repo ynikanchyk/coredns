@@ -2,6 +2,7 @@ package cache
 
 import (
 	"testing"
+	"time"
 
 	"github.com/miekg/coredns/middleware"
 	"github.com/miekg/coredns/middleware/test"
@@ -24,8 +25,14 @@ func msgTestMiekMx() *dns.Msg {
 	return m
 }
 
+func newTestCache() (Cache, *CachingResponseWriter) {
+	c := NewCache(0, []string{"."}, nil)
+	crr := NewCachingResponseWriter(nil, c.cache, time.Duration(0))
+	return c, crr
+}
+
 func TestCacheSetGet(t *testing.T) {
-	c := NewCache(nil)
+	c, crr := newTestCache()
 	res := msgTestMiekMx()
 	mt, opt := classify(res)
 	do := false
@@ -34,35 +41,36 @@ func TestCacheSetGet(t *testing.T) {
 	}
 
 	key := cacheKey(res, mt, do)
-	if key != "" {
-		switch mt {
-		case success:
-			duration := minTtl(res.Answer, mt)
-			i := newItem(res, duration)
-			c.cache.Set(key, i, duration)
-		case nameError, noData:
-			duration := minTtl(res.Ns, mt)
-			i := newItem(res, duration)
-			c.cache.Set(key, i, duration)
-		}
-	}
+	crr.Set(res, key, mt)
 
+	// TODO(miek): make this somewhat better and loop through a few messages.
 	name := middleware.Name(res.Question[0].Name).Normalize()
-	nxdomain := nameErrorKey(name, do)
-	if i, ok := c.cache.Get(nxdomain); ok {
-		resp := i.(*item).toMsg(res)
+	qtype := res.Question[0].Qtype
+
+	if i, ok := c.Get(name, qtype, do); ok {
+		resp := i.toMsg(res)
 		t.Logf("%s\n", resp.String())
 	}
 
-	qtype := res.Question[0].Qtype
-	successOrNoData := successKey(name, qtype, do)
-	if i, ok := c.cache.Get(successOrNoData); ok {
-		resp := i.(*item).toMsg(res)
+	time.Sleep(2 * time.Second)
+
+	if i, ok := c.Get(name, qtype, do); ok {
+		resp := i.toMsg(res)
 		t.Logf("%s\n", resp.String())
 	}
 }
 
-// TODO
+func TestCacheTruncated(t *testing.T) {
+	res := msgTestMiekMx()
+	res.Truncated = true
+	mt, _ := classify(res)
+	key := cacheKey(res, mt, true)
+	if key != "" {
+		t.Errorf("Truncated message should lead to empty cache key, got %s", key)
+	}
+}
+
+// TODO(miek)
 func TestClassify(t *testing.T) {
 
 }
