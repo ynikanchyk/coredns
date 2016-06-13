@@ -1,7 +1,7 @@
 package k8sclient
 
 import (
-//    "fmt"
+    "fmt"
     "net/url"
 )
 
@@ -42,7 +42,9 @@ func (c *K8sConnector) GetResourceList() *ResourceList {
     resources := new(ResourceList)
     
     error := getJson((c.baseUrl + apiBase), resources)
+    // TODO: handle no response from k8s
     if error != nil {
+		fmt.Printf("[ERROR] Response from kubernetes API is: %v\n", error)
         return nil
     }
 
@@ -66,7 +68,10 @@ func (c *K8sConnector) GetServiceList() *ServiceList {
     services := new(ServiceList)
 
     error := getJson((c.baseUrl + apiBase + apiServices), services)
+    // TODO: handle no response from k8s
     if error != nil {
+		fmt.Printf("[ERROR] Response from kubernetes API is: %v\n", error)
+
         return nil
     }
 
@@ -74,12 +79,19 @@ func (c *K8sConnector) GetServiceList() *ServiceList {
 }
 
 
+// GetServicesByNamespace returns a map of
+// namespacename :: [ kubernetesServiceItem ]
 func (c *K8sConnector) GetServicesByNamespace() map[string][]ServiceItem {
-     // GetServicesByNamespace returns a map of namespacename :: [ kubernetesServiceItem ]
 
     items := make(map[string][]ServiceItem)
 
     k8sServiceList := c.GetServiceList()
+
+    // TODO: handle no response from k8s
+    if k8sServiceList == nil {
+        return nil
+    }
+
     k8sItemList := k8sServiceList.Items
 
     for _, i := range k8sItemList {
@@ -91,8 +103,9 @@ func (c *K8sConnector) GetServicesByNamespace() map[string][]ServiceItem {
 }
 
 
+// GetServiceItemInNamespace returns the ServiceItem that matches
+// servicename in the namespace
 func (c *K8sConnector) GetServiceItemInNamespace(namespace string, servicename string) *ServiceItem {
-    // GetServiceItemInNamespace returns the ServiceItem that matches servicename in the namespace
 
     itemMap := c.GetServicesByNamespace()
 
