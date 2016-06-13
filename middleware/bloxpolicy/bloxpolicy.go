@@ -4,10 +4,10 @@ package bloxpolicy
 import (
 	"fmt"
 	"log"
-	"time"
+//	"time"
 
 	"github.com/miekg/coredns/middleware"
-	"github.com/miekg/coredns/middleware/metrics"
+//	"github.com/miekg/coredns/middleware/metrics"
 
 	"github.com/miekg/dns"
 	"golang.org/x/net/context"
@@ -21,16 +21,27 @@ type BloxPolicy struct {
 	ErrorFunc func(dns.ResponseWriter, *dns.Msg, int) // failover error handler
 }
 
+
 func (p BloxPolicy) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := middleware.State{W: w, Req: r}
+
+	clientIP := state.IP()
+	fmt.Printf("[DEBUG] bloxpolicy enter...   client IP: %v\n", clientIP)
+	port, err := state.Port()
+	fmt.Printf("[DEBUG] bloxpolicy enter... client port: %v\n", port)
 
 	fmt.Printf("bloxpolicy enter... endpoint: %v\n", p.Endpoint)
 	fmt.Printf("bloxpolicy enter... state: %v\n", state)
 	fmt.Printf("bloxpolicy enter...     w: %v\n", w)
 	fmt.Printf("bloxpolicy enter...     r: %v\n", r)
 
-	fmt.Printf("bloxpolicy enter client is : %v\n", state.RemoteAddr())
+	clientAllowed, err := p.IsClientAllowed(clientIP)
+	if ! clientAllowed {
+		fmt.Printf("[INFO] client lookup blocked by policy engine for client %v\n", clientIP)
+		return dns.RcodeRefused, nil
+	}
 
+	/*
 	for _, rule := range p.Rules {
 		if middleware.Name(rule.NameScope).Matches(state.Name()) {
 			responseRecorder := middleware.NewResponseRecorder(w)
@@ -74,6 +85,7 @@ func (p BloxPolicy) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 
 		}
 	}
+*/
 
 	rcode, err := p.Next.ServeDNS(ctx, w, r)
 
@@ -84,6 +96,7 @@ func (p BloxPolicy) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	fmt.Printf("####    #############   ####\n")
 	return rcode, err
 }
+
 
 // Rule configures the logging middleware.
 type Rule struct {
