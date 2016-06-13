@@ -56,6 +56,7 @@ var directiveOrder = []directive{
 	{"prometheus", setup.Prometheus},
 	{"errors", setup.Errors},
 	{"log", setup.Log},
+	{"bloxpolicy", setup.BloxPolicy},
 
 	{"chaos", setup.Chaos},
 	{"rewrite", setup.Rewrite},
