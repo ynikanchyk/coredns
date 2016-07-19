@@ -3,4 +3,4 @@ Corefile
 *.swp
 coredns
 kubectl
-go-test-tmpfile
+go-test-tmpfile*
