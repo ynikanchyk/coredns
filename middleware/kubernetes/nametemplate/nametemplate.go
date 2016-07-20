@@ -157,6 +157,11 @@ func (t *NameTemplate) GetRecordNameFromNameValues(values NameValues) string {
 	return strings.Join(recordName, ".")
 }
 
+func (t *NameTemplate) IsValid() bool {
+	// TODO: Stop being optimistic
+	return true
+}
+
 type NameValues struct {
 	ServiceName string
 	Namespace   string
