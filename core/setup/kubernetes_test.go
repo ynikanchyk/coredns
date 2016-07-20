@@ -23,8 +23,8 @@ func TestKubernetesParse(t *testing.T) {
 		shouldErr          bool
 		expectedErrContent string // substring from the expected error. Empty for positive cases.
 		expectedZoneCount  int    // expected count of defined zones. '-1' for negative cases.
-//		expectedNTValid bool      // NameTemplate to be initialized and valid
-		expectedNSCount int       // expected count of namespaces. '-1' for negative cases.
+		//		expectedNTValid bool      // NameTemplate to be initialized and valid
+		expectedNSCount int // expected count of namespaces. '-1' for negative cases.
 	}{
 		// positive
 		// TODO: not specifiying a zone maybe should error out.
@@ -173,7 +173,6 @@ func TestKubernetesParse(t *testing.T) {
 		if foundNSCount != test.expectedNSCount {
 			t.Errorf("Test %d: Expected kubernetes controller to be initialized with %d namespaces. Instead found %d namespaces: '%v' for input '%s'", i, test.expectedNSCount, foundNSCount, k8sController.Namespaces, test.input)
 		}
-
 
 	}
 }

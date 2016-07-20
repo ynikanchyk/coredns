@@ -8,8 +8,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/miekg/dns"
 	"github.com/miekg/coredns/middleware/kubernetes/k8stest"
+	"github.com/miekg/dns"
 )
 
 // Test data for A records

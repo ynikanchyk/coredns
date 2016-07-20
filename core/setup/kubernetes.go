@@ -60,7 +60,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 	var (
 		endpoints  = []string{defaultK8sEndpoint}
 		template   = defaultNameTemplate
-		//namespaces = []string{}
+		namespaces = []string{}
 	)
 
 	k8s.APIConn = k8sc.NewK8sConnector(endpoints[0])
@@ -96,7 +96,8 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 					if len(args) == 0 {
 						return kubernetes.Kubernetes{}, c.ArgErr()
 					}
-					k8s.Namespaces = args
+					namespaces = args
+					k8s.Namespaces = namespaces
 				}
 				for c.Next() {
 					switch c.Val() {
@@ -115,7 +116,8 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 						if len(args) == 0 {
 							return kubernetes.Kubernetes{}, c.ArgErr()
 						}
-						k8s.Namespaces = args
+						namespaces = args
+						k8s.Namespaces = namespaces
 					}
 				}
 			}
