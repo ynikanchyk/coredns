@@ -84,6 +84,8 @@ func (g Kubernetes) Records(name string, exact bool) ([]msg.Service, error) {
 		serviceName = util.WildcardStar
 	}
 
+	log.Printf("[debug] published namespaces: %v\n", g.Namespaces)
+
 	log.Printf("[debug] exact: %v\n", exact)
 	log.Printf("[debug] zone: %v\n", zone)
 	log.Printf("[debug] servicename: %v\n", serviceName)
@@ -96,7 +98,7 @@ func (g Kubernetes) Records(name string, exact bool) ([]msg.Service, error) {
 
 	// Abort if the namespace does not contain a wildcard, and namespace is not published per CoreFile
 	// Case where namespace contains a wildcard is handled in Get(...) method.
-	if (!nsWildcard) && (!util.StringInSlice(namespace, g.Namespaces)) {
+	if (!nsWildcard) && (len(g.Namespaces) > 0) && (!util.StringInSlice(namespace, g.Namespaces)) {
 		log.Printf("[debug] Namespace '%v' is not published by Corefile\n", namespace)
 		return nil, nil
 	}
@@ -157,7 +159,7 @@ func (g Kubernetes) Get(namespace string, nsWildcard bool, servicename string, s
 		if symbolMatches(namespace, item.Metadata.Namespace, nsWildcard) && symbolMatches(servicename, item.Metadata.Name, serviceWildcard) {
 			// If namespace has a wildcard, filter results against Corefile namespace list.
 			// (Namespaces without a wildcard were filtered before the call to this function.)
-			if nsWildcard && (!util.StringInSlice(item.Metadata.Namespace, g.Namespaces)) {
+			if nsWildcard && (len(g.Namespaces) > 0) && (!util.StringInSlice(item.Metadata.Namespace, g.Namespaces)) {
 				log.Printf("[debug] Namespace '%v' is not published by Corefile\n", item.Metadata.Namespace)
 				continue
 			}
