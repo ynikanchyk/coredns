@@ -60,7 +60,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 	var (
 		endpoints  = []string{defaultK8sEndpoint}
 		template   = defaultNameTemplate
-		namespaces = []string{}
+		//namespaces = []string{}
 	)
 
 	k8s.APIConn = k8sc.NewK8sConnector(endpoints[0])
@@ -78,6 +78,8 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 				k8s.Zones = kubernetes.NormalizeZoneList(zones)
 			}
 
+			// TODO: clean this parsing up
+
 			middleware.Zones(k8s.Zones).FullyQualify()
 			if c.NextBlock() {
 				// TODO(miek): 2 switches?
@@ -89,6 +91,12 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 					}
 					endpoints = args
 					k8s.APIConn = k8sc.NewK8sConnector(endpoints[0])
+				case "namespaces":
+					args := c.RemainingArgs()
+					if len(args) == 0 {
+						return kubernetes.Kubernetes{}, c.ArgErr()
+					}
+					k8s.Namespaces = args
 				}
 				for c.Next() {
 					switch c.Val() {
@@ -107,8 +115,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 						if len(args) == 0 {
 							return kubernetes.Kubernetes{}, c.ArgErr()
 						}
-						namespaces = args
-						k8s.Namespaces = namespaces
+						k8s.Namespaces = args
 					}
 				}
 			}
