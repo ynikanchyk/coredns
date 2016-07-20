@@ -108,7 +108,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 							return kubernetes.Kubernetes{}, c.ArgErr()
 						}
 						namespaces = args
-						k8s.Namespaces = &namespaces
+						k8s.Namespaces = namespaces
 					}
 				}
 			}
