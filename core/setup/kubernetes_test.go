@@ -1,7 +1,6 @@
 package setup
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -125,9 +124,8 @@ func TestKubernetesParse(t *testing.T) {
 	for i, test := range tests {
 		c := NewTestController(test.input)
 		k8sController, err := kubernetesParse(c)
-		fmt.Printf("i: %v\n", i)
-		//fmt.Printf("err: %v\n", err)
-		fmt.Printf("controller: %v\n", k8sController)
+		t.Logf("i: %v\n", i)
+		t.Logf("controller: %v\n", k8sController)
 
 		if test.shouldErr && err == nil {
 			t.Errorf("Test %d: Expected error, but found one for input '%s'. Error was: '%v'", i, test.input, err)

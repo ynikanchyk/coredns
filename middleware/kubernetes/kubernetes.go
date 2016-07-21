@@ -12,18 +12,14 @@ import (
 	"github.com/miekg/coredns/middleware/kubernetes/nametemplate"
 	"github.com/miekg/coredns/middleware/kubernetes/util"
 	"github.com/miekg/coredns/middleware/proxy"
-	//	"github.com/miekg/coredns/middleware/singleflight"
 
 	"github.com/miekg/dns"
-	"golang.org/x/net/context"
 )
 
 type Kubernetes struct {
 	Next  middleware.Handler
 	Zones []string
 	Proxy proxy.Proxy // Proxy for looking up names during the resolution process
-	Ctx   context.Context
-	//	Inflight   *singleflight.Group
 	APIConn      *k8sc.K8sConnector
 	NameTemplate *nametemplate.NameTemplate
 	Namespaces   []string

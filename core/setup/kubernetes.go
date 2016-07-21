@@ -1,23 +1,14 @@
 package setup
 
 import (
-	//"crypto/tls"
-	//"crypto/x509"
 	"log"
-	//"io/ioutil"
-	//"net"
-	//"net/http"
 	"strings"
-	//"time"
 
 	"github.com/miekg/coredns/middleware"
 	"github.com/miekg/coredns/middleware/kubernetes"
 	k8sc "github.com/miekg/coredns/middleware/kubernetes/k8sclient"
 	"github.com/miekg/coredns/middleware/kubernetes/nametemplate"
 	"github.com/miekg/coredns/middleware/proxy"
-	//"github.com/miekg/coredns/middleware/singleflight"
-
-	"golang.org/x/net/context"
 )
 
 const (
@@ -43,19 +34,8 @@ func Kubernetes(c *Controller) (middleware.Middleware, error) {
 }
 
 func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
-
-	/*
-	 * TODO: Remove unused state and simplify.
-	 * Inflight and Ctx might not be needed. Leaving in place until
-	 * we take a pass at API caching and optimizing connector to the
-	 * k8s API. Single flight (or limited upper-bound) for inflight
-	 * API calls may be desirable.
-	 */
-
 	k8s := kubernetes.Kubernetes{
 		Proxy: proxy.New([]string{}),
-		Ctx:   context.Background(),
-		//      Inflight:   &singleflight.Group{},
 	}
 	var (
 		endpoints  = []string{defaultK8sEndpoint}
