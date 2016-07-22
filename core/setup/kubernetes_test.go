@@ -22,8 +22,8 @@ func TestKubernetesParse(t *testing.T) {
 		shouldErr          bool
 		expectedErrContent string // substring from the expected error. Empty for positive cases.
 		expectedZoneCount  int    // expected count of defined zones. '-1' for negative cases.
-		//		expectedNTValid bool      // NameTemplate to be initialized and valid
-		expectedNSCount int // expected count of namespaces. '-1' for negative cases.
+		expectedNTValid    bool   // NameTemplate to be initialized and valid
+		expectedNSCount    int    // expected count of namespaces. '-1' for negative cases.
 	}{
 		// positive
 		// TODO: not specifiying a zone maybe should error out.
@@ -32,6 +32,7 @@ func TestKubernetesParse(t *testing.T) {
 			false,
 			"",
 			0,
+			true,
 			0,
 		},
 		{
@@ -39,6 +40,7 @@ func TestKubernetesParse(t *testing.T) {
 			false,
 			"",
 			1,
+			true,
 			0,
 		},
 		{
@@ -46,6 +48,7 @@ func TestKubernetesParse(t *testing.T) {
 			false,
 			"",
 			2,
+			true,
 			0,
 		},
 		{
@@ -55,6 +58,7 @@ func TestKubernetesParse(t *testing.T) {
 			false,
 			"",
 			1,
+			true,
 			0,
 		},
 		{
@@ -64,6 +68,7 @@ func TestKubernetesParse(t *testing.T) {
 			false,
 			"",
 			1,
+			true,
 			0,
 		},
 		{
@@ -73,6 +78,7 @@ func TestKubernetesParse(t *testing.T) {
 			false,
 			"",
 			1,
+			true,
 			1,
 		},
 		{
@@ -82,6 +88,7 @@ func TestKubernetesParse(t *testing.T) {
 			false,
 			"",
 			1,
+			true,
 			2,
 		},
 
@@ -93,29 +100,41 @@ func TestKubernetesParse(t *testing.T) {
 			true,
 			"Wrong argument count or unexpected line ending after 'endpoint'",
 			-1,
+			true,
+			-1,
+		},
+		// No template provided for template line.
+		{
+			`kubernetes coredns.local {
+    template
+}`,
+			true,
+			"",
+			-1,
+			false,
+			-1,
+		},
+		// Invalid template provided
+		{
+			`kubernetes coredns.local {
+    template {namespace}.{zone}
+}`,
+			true,
+			"",
+			-1,
+			false,
 			-1,
 		},
 		/*
-		   		// No template provided for template line.
-		      		{
+		 		// No valid provided for namespaces
+		   		{
 		   			`kubernetes coredns.local {
-		       template
-		   }`,
+		     namespaces
+		}`,
 		   			true,
 		   			"",
 		   			-1,
-		   			-1,
-		   		},
-		*/
-		/*
-		   		// No template provided for template line.
-		      		{
-		   			`kubernetes coredns.local {
-		       namespaces
-		   }`,
-		   			true,
-		   			"",
-		   			-1,
+					true,
 		   			-1,
 		   		},
 		*/
@@ -161,9 +180,11 @@ func TestKubernetesParse(t *testing.T) {
 		//    NameTemplate
 		if k8sController.NameTemplate == nil {
 			t.Errorf("Test %d: Expected kubernetes controller to be initialized with a NameTemplate. Instead found '%v' for input '%s'", i, k8sController.NameTemplate, test.input)
-		}
-		if !k8sController.NameTemplate.IsValid() {
-			t.Errorf("Test %d: NameTemplate reports invalid initial template settings for input '%s'", i, test.input)
+		} else {
+			foundNTValid := k8sController.NameTemplate.IsValid()
+			if foundNTValid != test.expectedNTValid {
+				t.Errorf("Test %d: Expected NameTemplate validity to be '%v', instead found '%v' for input '%s'", i, test.expectedNTValid, foundNTValid, test.input)
+			}
 		}
 
 		//    Namespaces

@@ -17,9 +17,9 @@ import (
 )
 
 type Kubernetes struct {
-	Next  middleware.Handler
-	Zones []string
-	Proxy proxy.Proxy // Proxy for looking up names during the resolution process
+	Next         middleware.Handler
+	Zones        []string
+	Proxy        proxy.Proxy // Proxy for looking up names during the resolution process
 	APIConn      *k8sc.K8sConnector
 	NameTemplate *nametemplate.NameTemplate
 	Namespaces   []string

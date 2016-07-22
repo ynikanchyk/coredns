@@ -61,6 +61,9 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 			// TODO: clean this parsing up
 
 			middleware.Zones(k8s.Zones).FullyQualify()
+
+			log.Printf("[debug] c data: %v\n", c)
+
 			if c.NextBlock() {
 				// TODO(miek): 2 switches?
 				switch c.Val() {

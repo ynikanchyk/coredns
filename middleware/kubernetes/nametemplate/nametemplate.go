@@ -37,6 +37,11 @@ var types = []string{
 	"pod",
 }
 
+var requiredSymbols = []string{
+	"namespace",
+	"service",
+}
+
 // TODO: Validate that provided NameTemplate string only contains:
 //			* valid, known symbols, or
 //			* static strings
@@ -88,6 +93,12 @@ func (t *NameTemplate) SetTemplate(s string) error {
 				log.Printf("[debug] Template string has static element '%v'\n", v)
 			}
 		}
+	}
+
+	if err == nil && !t.IsValid() {
+		err = errors.New("Record name template does not pass NameTemplate validation")
+		log.Printf("[debug] %v\n", err)
+		return err
 	}
 
 	return err
@@ -158,8 +169,17 @@ func (t *NameTemplate) GetRecordNameFromNameValues(values NameValues) string {
 }
 
 func (t *NameTemplate) IsValid() bool {
-	// TODO: Stop being optimistic
-	return true
+	result := true
+
+	// Ensure that all requiredSymbols are found in NameTemplate
+	for _, symbol := range requiredSymbols {
+		if _, ok := t.Element[symbol]; !ok {
+			result = false
+			break
+		}
+	}
+
+	return result
 }
 
 type NameValues struct {
