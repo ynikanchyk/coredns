@@ -126,17 +126,17 @@ func TestKubernetesParse(t *testing.T) {
 			-1,
 		},
 		/*
-		 		// No valid provided for namespaces
-		   		{
-		   			`kubernetes coredns.local {
-		     namespaces
-		}`,
-		   			true,
-		   			"",
-		   			-1,
-					true,
-		   			-1,
-		   		},
+			 		// No valid provided for namespaces
+			   		{
+			   			`kubernetes coredns.local {
+			     namespaces
+			}`,
+			   			true,
+			   			"",
+			   			-1,
+						true,
+			   			-1,
+			   		},
 		*/
 	}
 
