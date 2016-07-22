@@ -36,7 +36,6 @@ func Kubernetes(c *Controller) (middleware.Middleware, error) {
 func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 	k8s := kubernetes.Kubernetes{
 		Proxy: proxy.New([]string{}),
-		Namespaces: proxy.New([]string{}),
 	}
 	var (
 		endpoints  = []string{defaultK8sEndpoint}
@@ -81,7 +80,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 						return kubernetes.Kubernetes{}, c.ArgErr()
 					}
 					namespaces = args
-					k8s.Namespaces = namespaces
+					k8s.Namespaces = append(k8s.Namespaces, namespaces...)
 				}
 				for c.Next() {
 					switch c.Val() {
@@ -101,7 +100,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 							return kubernetes.Kubernetes{}, c.ArgErr()
 						}
 						namespaces = args
-						k8s.Namespaces = namespaces
+						k8s.Namespaces = append(k8s.Namespaces, namespaces...)
 					}
 				}
 			}
