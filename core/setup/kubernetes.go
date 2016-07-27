@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"errors"
 	"log"
 	"strings"
 
@@ -18,11 +19,9 @@ const (
 
 // Kubernetes sets up the kubernetes middleware.
 func Kubernetes(c *Controller) (middleware.Middleware, error) {
-	log.Printf("[debug] controller %v\n", c)
 	// TODO: Determine if subzone support required
 
 	kubernetes, err := kubernetesParse(c)
-
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +33,7 @@ func Kubernetes(c *Controller) (middleware.Middleware, error) {
 }
 
 func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
+	var err error
 	k8s := kubernetes.Kubernetes{
 		Proxy: proxy.New([]string{}),
 	}
@@ -47,6 +47,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 	k8s.NameTemplate = new(nametemplate.NameTemplate)
 	k8s.NameTemplate.SetTemplate(template)
 
+	// TODO: clean this parsing up
 	for c.Next() {
 		if c.Val() == "kubernetes" {
 			zones := c.RemainingArgs()
@@ -58,11 +59,12 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 				k8s.Zones = kubernetes.NormalizeZoneList(zones)
 			}
 
-			// TODO: clean this parsing up
-
 			middleware.Zones(k8s.Zones).FullyQualify()
-
-			log.Printf("[debug] c data: %v\n", c)
+			if k8s.Zones == nil || len(k8s.Zones) < 1 {
+				err = errors.New("Zone name must be provided for kubernetes middleware.")
+				log.Printf("[debug] %v\n", err)
+				return kubernetes.Kubernetes{}, err
+			}
 
 			if c.NextBlock() {
 				// TODO(miek): 2 switches?
@@ -74,6 +76,16 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 					}
 					endpoints = args
 					k8s.APIConn = k8sc.NewK8sConnector(endpoints[0])
+				case "template":
+					args := c.RemainingArgs()
+					if len(args) == 0 {
+						return kubernetes.Kubernetes{}, c.ArgErr()
+					}
+					template = strings.Join(args, "")
+					err = k8s.NameTemplate.SetTemplate(template)
+					if err != nil {
+						return kubernetes.Kubernetes{}, err
+					}
 				case "namespaces":
 					args := c.RemainingArgs()
 					if len(args) == 0 {
@@ -90,7 +102,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 							return kubernetes.Kubernetes{}, c.ArgErr()
 						}
 						template = strings.Join(args, "")
-						err := k8s.NameTemplate.SetTemplate(template)
+						err = k8s.NameTemplate.SetTemplate(template)
 						if err != nil {
 							return kubernetes.Kubernetes{}, err
 						}
@@ -107,5 +119,7 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 			return k8s, nil
 		}
 	}
-	return kubernetes.Kubernetes{}, nil
+	err = errors.New("Kubernetes setup called without keyword 'kubernetes' in Corefile")
+	log.Printf("[ERROR] %v\n", err)
+	return kubernetes.Kubernetes{}, err
 }
