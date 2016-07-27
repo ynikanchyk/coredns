@@ -352,5 +352,5 @@ TBD:
       .travis.yml file.
 	* ~~Implement test cases for http data parsing using dependency injection
 	  for http get operations.~~
-    * ~~Automate integration testing with kubernetes. (k8s launch and service start-up
-      automation is in middleware/kubernetes/tests)~~
+    * ~~Automate integration testing with kubernetes. (k8s launch and service
+      start-up automation is in middleware/kubernetes/tests)~~
