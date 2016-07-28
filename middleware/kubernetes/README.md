@@ -276,6 +276,8 @@ TBD:
 		* Update kubernetes middleware documentation to describe running CoreDNS as a
 		  SkyDNS replacement. (Include descriptions of different ways to pass CoreFile
 		  to coredns command.)
+		* Remove dependency on healthz for health checking in
+		  `kubernetes-rc.yaml` file.
 		* Expose load-balancer IP addresses.
 		* Calculate SRV priority based on number of instances running.
 		  (See SkyDNS README.md)
