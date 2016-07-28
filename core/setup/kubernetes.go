@@ -2,7 +2,6 @@ package setup
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 
@@ -37,8 +36,6 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 	k8s.NameTemplate = new(nametemplate.NameTemplate)
 	k8s.NameTemplate.SetTemplate(template)
 
-	fmt.Printf("c: %v\n", c)
-
 	for c.Next() {
 		if c.Val() == "kubernetes" {
 			zones := c.RemainingArgs()
@@ -51,7 +48,6 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 				// Normalize requested zones
 				k8s.Zones = kubernetes.NormalizeZoneList(zones)
 			}
-			//k8s.Zones = []string{"cluster.local"}
 
 			middleware.Zones(k8s.Zones).FullyQualify()
 			if k8s.Zones == nil || len(k8s.Zones) < 1 {
