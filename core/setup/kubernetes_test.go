@@ -55,6 +55,7 @@ func TestKubernetesParse(t *testing.T) {
 			true,
 			0,
 		},
+/*
 		{
 			"endpoint keyword with url",
 			`kubernetes coredns.local {
@@ -66,6 +67,7 @@ func TestKubernetesParse(t *testing.T) {
 			true,
 			0,
 		},
+*/
 		{
 			"template keyword with valid template",
 			`kubernetes coredns.local {
@@ -131,6 +133,7 @@ func TestKubernetesParse(t *testing.T) {
 			true,
 			0,
 		},
+		/* TODO: Remove if we don't use endpoint in future
 		{
 			"endpoint keyword without an endpoint value",
 			`kubernetes coredns.local {
@@ -142,6 +145,7 @@ func TestKubernetesParse(t *testing.T) {
 			true,
 			-1,
 		},
+		*/
 		{
 			"template keyword without a template value",
 			`kubernetes coredns.local {
@@ -177,6 +181,7 @@ func TestKubernetesParse(t *testing.T) {
 		},
 	}
 
+	t.Logf("Parser test cases count: %v", len(tests))
 	for i, test := range tests {
 		c := NewTestController(test.input)
 		k8sController, err := kubernetesParse(c)
@@ -228,6 +233,8 @@ func TestKubernetesParse(t *testing.T) {
 		foundNSCount := len(k8sController.Namespaces)
 		if foundNSCount != test.expectedNSCount {
 			t.Errorf("Test %d: Expected kubernetes controller to be initialized with %d namespaces. Instead found %d namespaces: '%v' for input '%s'", i, test.expectedNSCount, foundNSCount, k8sController.Namespaces, test.input)
+            t.Logf("k8sController is: %v", k8sController)
+            t.Logf("k8sController.Namespaces is: %v", k8sController.Namespaces)
 		}
 	}
 }

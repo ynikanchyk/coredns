@@ -10,6 +10,7 @@ all: coredns
 
 coredns:
 	GOOS=linux go build -a -tags netgo -installsuffix netgo
+	# Build static binary below. This might not be needed?
 	#CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo
 
 .PHONY: docker
