@@ -25,12 +25,11 @@ const (
 type Kubernetes struct {
 	Next         middleware.Handler
 	Zones        []string
-	Proxy proxy.Proxy // Proxy for looking up names during the resolution process
+	Proxy        proxy.Proxy // Proxy for looking up names during the resolution process
 	APIConn      *dnsController
 	NameTemplate *nametemplate.NameTemplate
 	Namespaces   []string
 }
-
 
 func NewK8sConnector() Kubernetes {
 	kubeClient, err := unversioned.NewInCluster()
@@ -307,20 +306,19 @@ func isKubernetesNameError(err error) bool {
 }
 
 func (g Kubernetes) getServiceRecordForIP(ip, name string) []msg.Service {
-   svcList, err := g.APIConn.svcLister.List()
-   if err != nil {
-       return nil
-   }
+	svcList, err := g.APIConn.svcLister.List()
+	if err != nil {
+		return nil
+	}
 
-   for _, service := range svcList.Items {
-       if service.Spec.ClusterIP == ip {
-           return []msg.Service{msg.Service{Host: ip}}
-       }
-   }
+	for _, service := range svcList.Items {
+		if service.Spec.ClusterIP == ip {
+			return []msg.Service{msg.Service{Host: ip}}
+		}
+	}
 
-   return nil
+	return nil
 }
-
 
 const (
 	priority   = 10  // default priority when nothing is set

@@ -30,13 +30,13 @@ const (
 
 // StoreToNamespaceLister makes a Store that lists Namespaces.
 type StoreToNamespaceLister struct {
-   cache.Store
+	cache.Store
 }
 
 // List lists all Namespaces in the store.
 func (s *StoreToNamespaceLister) List() (ns api.NamespaceList, err error) {
-   for _, m := range s.Store.List() {
-       ns.Items = append(ns.Items, *(m.(*api.Namespace)))
-   }
-   return ns, nil
+	for _, m := range s.Store.List() {
+		ns.Items = append(ns.Items, *(m.(*api.Namespace)))
+	}
+	return ns, nil
 }

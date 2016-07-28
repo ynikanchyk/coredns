@@ -292,31 +292,31 @@ func (k Kubernetes) SOA(zone string, state middleware.State) *dns.SOA {
 }
 
 func (k Kubernetes) PTR(zone string, state middleware.State) ([]dns.RR, error) {
-   reverseIP, ok := extractIP(state.Name())
-   if !ok {
-       return nil, fmt.Errorf("does not support reverse lookup for %s", state.QName())
-   }
+	reverseIP, ok := extractIP(state.Name())
+	if !ok {
+		return nil, fmt.Errorf("does not support reverse lookup for %s", state.QName())
+	}
 
-   records := make([]dns.RR, 1)
-   services, err := k.records(state, false)
-   if err != nil {
-       return nil, err
-   }
+	records := make([]dns.RR, 1)
+	services, err := k.records(state, false)
+	if err != nil {
+		return nil, err
+	}
 
-   for _, serv := range services {
-       ip := net.ParseIP(serv.Host)
-       if reverseIP != serv.Host {
-           continue
-       }
-       switch {
-       case ip.To4() != nil:
-           records = append(records, serv.NewPTR(state.QName(), ip.To4().String()))
-           break
-       case ip.To4() == nil:
-           // nodata?
-       }
-   }
-   return records, nil
+	for _, serv := range services {
+		ip := net.ParseIP(serv.Host)
+		if reverseIP != serv.Host {
+			continue
+		}
+		switch {
+		case ip.To4() != nil:
+			records = append(records, serv.NewPTR(state.QName(), ip.To4().String()))
+			break
+		case ip.To4() == nil:
+			// nodata?
+		}
+	}
+	return records, nil
 }
 
 func isDuplicateCNAME(r *dns.CNAME, records []dns.RR) bool {
@@ -339,20 +339,20 @@ func copyState(state middleware.State, target string, typ uint16) middleware.Sta
 // extractIP turns a standard PTR reverse record lookup name
 // into an IP address
 func extractIP(reverseName string) (string, bool) {
-   if !strings.HasSuffix(reverseName, arpaSuffix) {
-       return "", false
-   }
-   search := strings.TrimSuffix(reverseName, arpaSuffix)
+	if !strings.HasSuffix(reverseName, arpaSuffix) {
+		return "", false
+	}
+	search := strings.TrimSuffix(reverseName, arpaSuffix)
 
-   // reverse the segments and then combine them
-   segments := reverseArray(strings.Split(search, "."))
-   return strings.Join(segments, "."), true
+	// reverse the segments and then combine them
+	segments := reverseArray(strings.Split(search, "."))
+	return strings.Join(segments, "."), true
 }
 
 func reverseArray(arr []string) []string {
-   for i := 0; i < len(arr)/2; i++ {
-       j := len(arr) - i - 1
-       arr[i], arr[j] = arr[j], arr[i]
-   }
-   return arr
+	for i := 0; i < len(arr)/2; i++ {
+		j := len(arr) - i - 1
+		arr[i], arr[j] = arr[j], arr[i]
+	}
+	return arr
 }

@@ -18,7 +18,7 @@ kubernetes coredns.local {
 
 func TestKubernetesParse(t *testing.T) {
 	tests := []struct {
-		description		   string
+		description        string
 		input              string
 		shouldErr          bool
 		expectedErrContent string // substring from the expected error. Empty for positive cases.
@@ -55,19 +55,19 @@ func TestKubernetesParse(t *testing.T) {
 			true,
 			0,
 		},
-/*
-		{
-			"endpoint keyword with url",
-			`kubernetes coredns.local {
-    endpoint http://localhost:9090
-}`,
-			false,
-			"",
-			1,
-			true,
-			0,
-		},
-*/
+		/*
+		   		{
+		   			"endpoint keyword with url",
+		   			`kubernetes coredns.local {
+		       endpoint http://localhost:9090
+		   }`,
+		   			false,
+		   			"",
+		   			1,
+		   			true,
+		   			0,
+		   		},
+		*/
 		{
 			"template keyword with valid template",
 			`kubernetes coredns.local {
@@ -134,17 +134,17 @@ func TestKubernetesParse(t *testing.T) {
 			0,
 		},
 		/* TODO: Remove if we don't use endpoint in future
-		{
-			"endpoint keyword without an endpoint value",
-			`kubernetes coredns.local {
-    endpoint
-}`,
-			true,
-			"Wrong argument count or unexpected line ending after 'endpoint'",
-			-1,
-			true,
-			-1,
-		},
+				{
+					"endpoint keyword without an endpoint value",
+					`kubernetes coredns.local {
+		    endpoint
+		}`,
+					true,
+					"Wrong argument count or unexpected line ending after 'endpoint'",
+					-1,
+					true,
+					-1,
+				},
 		*/
 		{
 			"template keyword without a template value",
@@ -233,8 +233,8 @@ func TestKubernetesParse(t *testing.T) {
 		foundNSCount := len(k8sController.Namespaces)
 		if foundNSCount != test.expectedNSCount {
 			t.Errorf("Test %d: Expected kubernetes controller to be initialized with %d namespaces. Instead found %d namespaces: '%v' for input '%s'", i, test.expectedNSCount, foundNSCount, k8sController.Namespaces, test.input)
-            t.Logf("k8sController is: %v", k8sController)
-            t.Logf("k8sController.Namespaces is: %v", k8sController.Namespaces)
+			t.Logf("k8sController is: %v", k8sController)
+			t.Logf("k8sController.Namespaces is: %v", k8sController.Namespaces)
 		}
 	}
 }

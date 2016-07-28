@@ -79,7 +79,7 @@ func (s *Service) NewNS(name string) *dns.NS {
 
 // NewPTR returns a new PTR record based on the Service.
 func (s *Service) NewPTR(name string, target string) *dns.PTR {
-   return &dns.PTR{Hdr: dns.RR_Header{Name: name, Rrtype: dns.TypePTR, Class: dns.ClassINET, Ttl: s.Ttl}, Ptr: dns.Fqdn(target)}
+	return &dns.PTR{Hdr: dns.RR_Header{Name: name, Rrtype: dns.TypePTR, Class: dns.ClassINET, Ttl: s.Ttl}, Ptr: dns.Fqdn(target)}
 }
 
 // Group checks the services in sx, it looks for a Group attribute on the shortest
