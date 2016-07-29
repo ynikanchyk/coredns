@@ -6,9 +6,8 @@ TEST_VERBOSE := -v
 
 DOCKER_IMAGE_NAME := $$USER/coredns
 
-all: coredns
 
-coredns:
+all:
 	GOOS=linux go build -a -tags netgo -installsuffix netgo
 	# Build static binary below. This might not be needed?
 	#CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo
@@ -32,5 +31,3 @@ testk8s:
 .PHONY: clean
 clean:
 	go clean
-	# Remove docker image
-	if [ -n `docker images -q $(DOCKER_IMAGE_NAME)` ]; then docker rmi $(DOCKER_IMAGE_NAME) ; fi
