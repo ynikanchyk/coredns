@@ -185,7 +185,7 @@ func TestKubernetesParse(t *testing.T) {
 	for i, test := range tests {
 		c := NewTestController(test.input)
 		k8sController, err := kubernetesParse(c)
-		t.Logf("setup test: %v -- %v\n", i, test.description)
+		t.Logf("setup test: %2v -- %v\n", i, test.description)
 		//t.Logf("controller: %v\n", k8sController)
 
 		if test.shouldErr && err == nil {

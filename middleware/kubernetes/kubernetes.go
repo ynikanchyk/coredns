@@ -16,10 +16,11 @@ import (
 	"github.com/miekg/dns"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/kubernetes/pkg/client/restclient"
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
+	defaultResyncPeriod = 5 * time.Minute
 )
 
 type Kubernetes struct {
@@ -27,22 +28,26 @@ type Kubernetes struct {
 	Zones        []string
 	Proxy        proxy.Proxy // Proxy for looking up names during the resolution process
 	APIConn      *dnsController
+	ResyncPeriod time.Duration
 	NameTemplate *nametemplate.NameTemplate
 	Namespaces   []string
 }
 
-func NewK8sConnector() Kubernetes {
-	kubeClient, err := unversioned.NewInCluster()
+func (g Kubernetes) StartKubeCache() error {
+	//kubeClient, err := unversioned.NewInCluster()
+	kubeConfig := restclient.Config{Host: "localhost:8080"}
+	kubeClient, err := unversioned.New(&kubeConfig)
 	if err != nil {
-		// ("failed to create client: %v", err)
+		log.Printf("[ERROR] Failed to create kubernetes notification controller: %v", err)
+		return err
 	}
+	g.APIConn = newdnsController(kubeClient, g.ResyncPeriod)
+	go g.APIConn.Run()
 
-	k8s := Kubernetes{
-		APIConn: newdnsController(kubeClient, resyncPeriod),
-	}
-	go k8s.APIConn.Run()
-	return k8s
+	log.Printf("[debug] Kubernetes notifcation controller started")
+	return err
 }
+
 
 // getZoneForName returns the zone string that matches the name and a
 // list of the DNS labels from name that are within the zone.

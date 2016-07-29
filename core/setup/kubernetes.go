@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/miekg/coredns/middleware"
 	"github.com/miekg/coredns/middleware/kubernetes"
@@ -12,11 +13,17 @@ import (
 
 const (
 	defaultNameTemplate = "{service}.{namespace}.{zone}"
+	defaultResyncPeriod = 5 * time.Minute
 )
 
 // Kubernetes sets up the kubernetes middleware.
 func Kubernetes(c *Controller) (middleware.Middleware, error) {
 	kubernetes, err := kubernetesParse(c)
+	if err != nil {
+		return nil, err
+	}
+
+	err = kubernetes.StartKubeCache()
 	if err != nil {
 		return nil, err
 	}
@@ -31,10 +38,13 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 	var err error
 	template := defaultNameTemplate
 
-	k8s := kubernetes.NewK8sConnector()
+	k8s := kubernetes.Kubernetes{}
 
+	k8s.ResyncPeriod = defaultResyncPeriod
 	k8s.NameTemplate = new(nametemplate.NameTemplate)
 	k8s.NameTemplate.SetTemplate(template)
+
+	// TODO: expose resync period in Corefile
 
 	for c.Next() {
 		if c.Val() == "kubernetes" {
