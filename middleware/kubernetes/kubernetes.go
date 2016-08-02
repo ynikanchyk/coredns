@@ -35,8 +35,12 @@ type Kubernetes struct {
 
 func (g Kubernetes) StartKubeCache() error {
 	//kubeClient, err := unversioned.NewInCluster()
-	kubeConfig := restclient.Config{Host: "localhost:8080"}
+	kubeConfig := restclient.Config{
+		Host: "http://localhost:8080",
+	}
 	kubeClient, err := unversioned.New(&kubeConfig)
+	log.Printf("kubeClient: %v\n", kubeClient)
+	log.Printf("kubeClient.Services(): %v\n", kubeClient.Services(api.NamespaceDefault))
 	if err != nil {
 		log.Printf("[ERROR] Failed to create kubernetes notification controller: %v", err)
 		return err

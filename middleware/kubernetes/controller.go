@@ -149,6 +149,7 @@ func (dns *dnsController) GetNamespaceList() *api.NamespaceList {
 }
 
 func (dns *dnsController) GetServiceList() *api.ServiceList {
+	log.Printf("[debug] here in GetServiceList")
 	svcList, err := dns.svcLister.List()
 	if err != nil {
 		return &api.ServiceList{}
