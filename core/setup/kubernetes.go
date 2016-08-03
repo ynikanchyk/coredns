@@ -27,6 +27,7 @@ func Kubernetes(c *Controller) (middleware.Middleware, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("[debug] after parse and start KubeCache, APIconn is: %v", kubernetes.APIConn)
 
 	return func(next middleware.Handler) middleware.Handler {
 		kubernetes.Next = next
@@ -38,9 +39,9 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 	var err error
 	template := defaultNameTemplate
 
-	k8s := kubernetes.Kubernetes{}
-
-	k8s.ResyncPeriod = defaultResyncPeriod
+	k8s := kubernetes.Kubernetes{
+        ResyncPeriod: defaultResyncPeriod,
+    }
 	k8s.NameTemplate = new(nametemplate.NameTemplate)
 	k8s.NameTemplate.SetTemplate(template)
 

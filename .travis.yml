@@ -28,11 +28,16 @@ before_script:
   - curl -L  https://github.com/coreos/etcd/releases/download/v2.3.1/etcd-v2.3.1-linux-amd64.tar.gz -o etcd-v2.3.1-linux-amd64.tar.gz
   - tar xzvf etcd-v2.3.1-linux-amd64.tar.gz
   - ./etcd-v2.3.1-linux-amd64/etcd &
-  - go get
-  - go get github.com/coreos/go-etcd/etcd
   - if which docker &>/dev/null ; then docker pull gcr.io/google_containers/hyperkube-amd64:v1.2.4 ; docker ps -a ; fi
-  - pwd
   - if which docker &>/dev/null ; then ./middleware/kubernetes/test/00_run_k8s.sh && ./middleware/kubernetes/test/10_setup_kubectl.sh && ./middleware/kubernetes/test/20_setup_k8s_services.sh ; docker ps -a ; fi
+  # Add Godeps dependencies to GOPATH and PATH
+  - export GOPATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace:$GOPATH"
+  - export PATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace/bin:$PATH"
+  - go get github.com/tools/godep
+  - go get -d ./...
+  # Fix kubernetes source
+  - bash -c 'cd Godeps/_workspace/src/k8s.io/kubernetes && godep restore'
+  - go get github.com/coreos/go-etcd/etcd
 
 script:
   - go test -tags etcd -race -bench=. ./...

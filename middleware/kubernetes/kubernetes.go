@@ -53,6 +53,9 @@ func (g Kubernetes) StartKubeCache() error {
 		return err
 	}
 	g.APIConn = newdnsController(kubeClient, g.ResyncPeriod)
+
+	log.Printf("[debug] APIConn before Run: %v", g.APIConn)
+
 	go g.APIConn.Run()
 
 	log.Printf("[debug] Kubernetes notifcation controller started")
