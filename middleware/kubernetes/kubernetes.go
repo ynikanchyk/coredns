@@ -16,7 +16,7 @@ import (
 	"github.com/miekg/dns"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/client/restclient"
+	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 )
 
 const (
@@ -34,11 +34,18 @@ type Kubernetes struct {
 }
 
 func (g Kubernetes) StartKubeCache() error {
-	//kubeClient, err := unversioned.NewInCluster()
-	kubeConfig := restclient.Config{
-		Host: "http://localhost:8080",
+	// For a custom api server or running outside a k8s cluster
+	// set URL in env.KUBERNETES_MASTER
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	overrides := &clientcmd.ConfigOverrides{}
+	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, overrides)
+	config, err := clientConfig.ClientConfig()
+	if err != nil {
+		log.Printf("error connecting to the client: %v", err)
+		return err
 	}
-	kubeClient, err := unversioned.New(&kubeConfig)
+	kubeClient, err := unversioned.New(config)
+
 	log.Printf("kubeClient: %v\n", kubeClient)
 	log.Printf("kubeClient.Services(): %v\n", kubeClient.Services(api.NamespaceDefault))
 	if err != nil {
@@ -51,7 +58,6 @@ func (g Kubernetes) StartKubeCache() error {
 	log.Printf("[debug] Kubernetes notifcation controller started")
 	return err
 }
-
 
 // getZoneForName returns the zone string that matches the name and a
 // list of the DNS labels from name that are within the zone.
