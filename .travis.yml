@@ -25,6 +25,9 @@ before_install:
   - env
 
 before_script:
+  # Fix repo name for golang imports.
+  - bash -c 'REPONAME=`realpath --relative-to=../.. .` if [ "${REPONAME}" != "miekg/coredns" ]; then mkdir ../../miekg ; ln -s . ../../miekg/coredns ; fi'
+  - ls -lagFR ../..
   - curl -L  https://github.com/coreos/etcd/releases/download/v2.3.1/etcd-v2.3.1-linux-amd64.tar.gz -o etcd-v2.3.1-linux-amd64.tar.gz
   - tar xzvf etcd-v2.3.1-linux-amd64.tar.gz
   - ./etcd-v2.3.1-linux-amd64/etcd &
@@ -38,6 +41,8 @@ before_script:
   # Fix kubernetes source
   - bash -c 'cd Godeps/_workspace/src/k8s.io/kubernetes && godep restore'
   - go get github.com/coreos/go-etcd/etcd
+  - go build -v -ldflags="-s -w"
+  - ls -lag
 
 script:
   - go test -tags etcd -race -bench=. ./...
