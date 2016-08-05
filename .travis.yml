@@ -26,7 +26,10 @@ before_install:
 
 before_script:
   # Fix repo name for golang imports.
-  - bash -c 'REPONAME=`realpath --relative-to=../.. .` if [ "${REPONAME}" != "miekg/coredns" ]; then mkdir ../../miekg ; ln -s . ../../miekg/coredns ; fi'
+  - if [ `realpath --relative-to=../.. .` != "miekg/coredns" ]; then
+        mkdir ../../miekg
+        ln -s . ../../miekg/coredns
+    fi
   - ls -lagFR ../..
   - curl -L  https://github.com/coreos/etcd/releases/download/v2.3.1/etcd-v2.3.1-linux-amd64.tar.gz -o etcd-v2.3.1-linux-amd64.tar.gz
   - tar xzvf etcd-v2.3.1-linux-amd64.tar.gz
