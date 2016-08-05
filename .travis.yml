@@ -25,11 +25,9 @@ before_install:
   - env
 
 before_script:
-  # Fix repo name for golang imports.
-  - if [ `realpath --relative-to=../.. .` != "miekg/coredns" ]; then
-        mkdir ../../miekg
-        ln -s . ../../miekg/coredns
-    fi
+  # Fix repo name for golang imports. When building in a forked repo the import path will be incorrect.
+  # Fix is to detect this case and create a symbolic link for the real import name.
+  - test `realpath --relative-to=../.. .` != "miekg/coredns" && mkdir -p ../../miekg && ln -s . ../../miekg/coredns
   - ls -lagFR ../..
   - curl -L  https://github.com/coreos/etcd/releases/download/v2.3.1/etcd-v2.3.1-linux-amd64.tar.gz -o etcd-v2.3.1-linux-amd64.tar.gz
   - tar xzvf etcd-v2.3.1-linux-amd64.tar.gz
