@@ -46,7 +46,7 @@ func (g Kubernetes) StartKubeCache() error {
 	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, overrides)
 	config, err := clientConfig.ClientConfig()
 	if err != nil {
-		log.Printf("error connecting to the client: %v", err)
+		log.Printf("[debug] error connecting to the client: %v", err)
 		return err
 	}
 	kubeClient, err := unversioned.New(config)
@@ -57,7 +57,7 @@ func (g Kubernetes) StartKubeCache() error {
 		log.Printf("[ERROR] Failed to create kubernetes notification controller: %v", err)
 		return err
 	}
-	g.APIConn = newdnsController(kubeClient, g.ResyncPeriod)
+	g.APIConn = newdnsController(kubeClient, (5 * time.Minute))
 
 	log.Printf("[debug] APIConn before Run: %v", g.APIConn)
 
@@ -66,6 +66,13 @@ func (g Kubernetes) StartKubeCache() error {
 	log.Printf("[debug] APIConn after Run: %v", g.APIConn)
 
 	log.Printf("[debug] Kubernetes notifcation controller started")
+
+	sl := g.APIConn.GetServiceList()
+	log.Printf("[debug] get service list %v", sl)
+	log.Printf("[debug] get sl.TypeMeta %v", sl.TypeMeta.APIVersion)
+	log.Printf("[debug] get service list %v", sl.Items)
+	log.Printf("[debug] get service list len %v", len(sl.Items))
+
 	return err
 }
 
@@ -150,6 +157,7 @@ func (g Kubernetes) Records(name string, exact bool) ([]msg.Service, error) {
 		return nil, nil
 	}
 
+	log.Printf("before g.Get(namespace, nsWildcard, serviceName, serviceWildcard): %v %v %v %v", namespace, nsWildcard, serviceName, serviceWildcard)
 	k8sItems, err := g.Get(namespace, nsWildcard, serviceName, serviceWildcard)
 	log.Printf("[debug] k8s items: %v\n", k8sItems)
 	if err != nil {

@@ -129,14 +129,14 @@ func (dns *dnsController) Stop() error {
 
 // Run starts the controller.
 func (dns *dnsController) Run() {
-	log.Println("starting coredns controller")
+	log.Println("[debug] starting coredns controller")
 
 	go dns.endpController.Run(dns.stopCh)
 	go dns.svcController.Run(dns.stopCh)
 	go dns.nsController.Run(dns.stopCh)
 
 	<-dns.stopCh
-	log.Println("shutting down coredns controller")
+	log.Println("[debug] shutting down coredns controller")
 }
 
 func (dns *dnsController) GetNamespaceList() *api.NamespaceList {
