@@ -40,8 +40,8 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 	template := defaultNameTemplate
 
 	k8s := kubernetes.Kubernetes{
-        ResyncPeriod: defaultResyncPeriod,
-    }
+		ResyncPeriod: defaultResyncPeriod,
+	}
 	k8s.NameTemplate = new(nametemplate.NameTemplate)
 	k8s.NameTemplate.SetTemplate(template)
 
@@ -87,6 +87,14 @@ func kubernetesParse(c *Controller) (kubernetes.Kubernetes, error) {
 						k8s.Namespaces = append(k8s.Namespaces, args...)
 					} else {
 						log.Printf("[debug] 'namespaces' keyword provided without any namespace values.")
+						return kubernetes.Kubernetes{}, c.ArgErr()
+					}
+				case "endpoint":
+					args := c.RemainingArgs()
+					if len(args) != 0 {
+						k8s.APIEndpoint = args[0]
+					} else {
+						log.Printf("[debug] 'endpoint' keyword provided without any endpoint url value.")
 						return kubernetes.Kubernetes{}, c.ArgErr()
 					}
 				}

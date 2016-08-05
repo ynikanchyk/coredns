@@ -5,17 +5,6 @@ import (
 	"testing"
 )
 
-/*
-kubernetes coredns.local {
-        # Use url for k8s API endpoint
-        endpoint http://localhost:8080
-        # Assemble k8s record names with the template
-        template {service}.{namespace}.{zone}
-        # Only expose the k8s namespace "demo"
-        #namespaces demo
-    }
-*/
-
 func TestKubernetesParse(t *testing.T) {
 	tests := []struct {
 		description        string
@@ -55,19 +44,17 @@ func TestKubernetesParse(t *testing.T) {
 			true,
 			0,
 		},
-		/*
-		   		{
-		   			"endpoint keyword with url",
-		   			`kubernetes coredns.local {
-		       endpoint http://localhost:9090
-		   }`,
-		   			false,
-		   			"",
-		   			1,
-		   			true,
-		   			0,
-		   		},
-		*/
+		{
+			"endpoint keyword with url",
+			`kubernetes coredns.local {
+	endpoint http://localhost:9090
+}`,
+			false,
+			"",
+			1,
+			true,
+			0,
+		},
 		{
 			"template keyword with valid template",
 			`kubernetes coredns.local {
@@ -133,19 +120,17 @@ func TestKubernetesParse(t *testing.T) {
 			true,
 			0,
 		},
-		/* TODO: Remove if we don't use endpoint in future
-				{
-					"endpoint keyword without an endpoint value",
-					`kubernetes coredns.local {
-		    endpoint
-		}`,
-					true,
-					"Wrong argument count or unexpected line ending after 'endpoint'",
-					-1,
-					true,
-					-1,
-				},
-		*/
+		{
+			"endpoint keyword without an endpoint value",
+			`kubernetes coredns.local {
+    endpoint
+}`,
+			true,
+			"Wrong argument count or unexpected line ending after 'endpoint'",
+			-1,
+			true,
+			-1,
+		},
 		{
 			"template keyword without a template value",
 			`kubernetes coredns.local {

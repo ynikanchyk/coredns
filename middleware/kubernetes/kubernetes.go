@@ -17,6 +17,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
+	clientcmdapi "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 )
 
 const (
@@ -27,6 +28,7 @@ type Kubernetes struct {
 	Next         middleware.Handler
 	Zones        []string
 	Proxy        proxy.Proxy // Proxy for looking up names during the resolution process
+	APIEndpoint  string
 	APIConn      *dnsController
 	ResyncPeriod time.Duration
 	NameTemplate *nametemplate.NameTemplate
@@ -38,6 +40,9 @@ func (g Kubernetes) StartKubeCache() error {
 	// set URL in env.KUBERNETES_MASTER
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	overrides := &clientcmd.ConfigOverrides{}
+	if len(g.APIEndpoint) > 0 {
+		overrides.ClusterInfo = clientcmdapi.Cluster{Server: g.APIEndpoint}
+	}
 	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, overrides)
 	config, err := clientConfig.ClientConfig()
 	if err != nil {
@@ -57,6 +62,8 @@ func (g Kubernetes) StartKubeCache() error {
 	log.Printf("[debug] APIConn before Run: %v", g.APIConn)
 
 	go g.APIConn.Run()
+
+	log.Printf("[debug] APIConn after Run: %v", g.APIConn)
 
 	log.Printf("[debug] Kubernetes notifcation controller started")
 	return err
