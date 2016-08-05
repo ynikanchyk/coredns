@@ -30,7 +30,8 @@ before_script:
   #   Fix is to detect this case and create a symbolic link for the real import name.
   #   Note: This assumes that both the upstream "real" repo and the fork are hosted
   #         at the same domain. (eg. github.com)
-  - ( export REPONAME=`pwd | rev | cut -d "/" -f 1-2 | rev` && test "$REPO" != "miekg/coredns" && mkdir -p ../../miekg && ln -s ../$REPONAME ../../miekg/coredns )
+  - ( export UPSTREAM="miekg/coredns" && export REPONAME=`pwd | rev | cut -d "/" -f 1-2 | rev` && test "$REPO" != "$UPSTREAM" && mkdir -p ../../`echo $UPSTREAM | cut -d "/" -f 1` && ln -s ../$REPONAME ../../$UPSTREAM )
+  - ls -FlagR ../..
   # Download etcd, unpack and launch
   - curl -L  https://github.com/coreos/etcd/releases/download/v2.3.1/etcd-v2.3.1-linux-amd64.tar.gz -o etcd-v2.3.1-linux-amd64.tar.gz
   - tar xzvf etcd-v2.3.1-linux-amd64.tar.gz
@@ -46,4 +47,4 @@ before_script:
 script:
   - go test -tags etcd -race -bench=. ./...
   # Run kubernetes integration tests only if kubectl is available. i.e. If kubernetes was launched
-  - ./middleware/kubernetes/test/kubectl version && go test -tags k8s -race -bench=. -run 'TestK8sIntegration' ./test
+  #- ./middleware/kubernetes/test/kubectl version && go test -tags k8s -race -bench=. -run 'TestK8sIntegration' ./test
