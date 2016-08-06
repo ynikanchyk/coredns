@@ -35,7 +35,7 @@ type Kubernetes struct {
 	Namespaces   []string
 }
 
-func (g Kubernetes) StartKubeCache() error {
+func (g *Kubernetes) StartKubeCache() error {
 	// For a custom api server or running outside a k8s cluster
 	// set URL in env.KUBERNETES_MASTER
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
@@ -81,7 +81,7 @@ func (g Kubernetes) StartKubeCache() error {
 // For example, if "coredns.local" is a zone configured for the
 // Kubernetes middleware, then getZoneForName("a.b.coredns.local")
 // will return ("coredns.local", ["a", "b"]).
-func (g Kubernetes) getZoneForName(name string) (string, []string) {
+func (g *Kubernetes) getZoneForName(name string) (string, []string) {
 	var zone string
 	var serviceSegments []string
 
@@ -102,7 +102,7 @@ func (g Kubernetes) getZoneForName(name string) (string, []string) {
 // If exact is true, it will lookup just
 // this name. This is used when find matches when completing SRV lookups
 // for instance.
-func (g Kubernetes) Records(name string, exact bool) ([]msg.Service, error) {
+func (g *Kubernetes) Records(name string, exact bool) ([]msg.Service, error) {
 	// TODO: refector this.
 	// Right now GetNamespaceFromSegmentArray do not supports PRE queries
 	if strings.HasSuffix(name, arpaSuffix) {
@@ -174,7 +174,7 @@ func (g Kubernetes) Records(name string, exact bool) ([]msg.Service, error) {
 }
 
 // TODO: assemble name from parts found in k8s data based on name template rather than reusing query string
-func (g Kubernetes) getRecordsForServiceItems(serviceItems []api.Service, values nametemplate.NameValues) []msg.Service {
+func (g *Kubernetes) getRecordsForServiceItems(serviceItems []api.Service, values nametemplate.NameValues) []msg.Service {
 	var records []msg.Service
 
 	for _, item := range serviceItems {
@@ -200,7 +200,7 @@ func (g Kubernetes) getRecordsForServiceItems(serviceItems []api.Service, values
 }
 
 // Get performs the call to the Kubernetes http API.
-func (g Kubernetes) Get(namespace string, nsWildcard bool, servicename string, serviceWildcard bool) ([]api.Service, error) {
+func (g *Kubernetes) Get(namespace string, nsWildcard bool, servicename string, serviceWildcard bool) ([]api.Service, error) {
 	serviceList := g.APIConn.GetServiceList()
 
 	/* TODO: Remove?
@@ -245,7 +245,7 @@ func isKubernetesNameError(err error) bool {
 	return false
 }
 
-func (g Kubernetes) getServiceRecordForIP(ip, name string) []msg.Service {
+func (g *Kubernetes) getServiceRecordForIP(ip, name string) []msg.Service {
 	svcList, err := g.APIConn.svcLister.List()
 	if err != nil {
 		return nil
