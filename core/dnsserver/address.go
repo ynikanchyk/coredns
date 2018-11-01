@@ -31,15 +31,15 @@ func (z zoneAddr) String() string {
 
 // normalizeZone parses an zone string into a structured format with separate
 // host, and port portions, as well as the original input string.
-func normalizeZone(str string) (zoneAddr, error) {
+func normalizeZone(str string) ([]zoneAddr, error) {
 	var err error
 
 	var trans string
 	trans, str = parse.Transport(str)
 
-	host, port, ipnet, err := plugin.SplitHostPort(str)
+	hosts, port, ipnet, err := plugin.SplitHostPort(str)
 	if err != nil {
-		return zoneAddr{}, err
+		return []zoneAddr{zoneAddr{}}, err
 	}
 
 	if port == "" {
@@ -54,8 +54,11 @@ func normalizeZone(str string) (zoneAddr, error) {
 			port = transport.HTTPSPort
 		}
 	}
-
-	return zoneAddr{Zone: dns.Fqdn(host), Port: port, Transport: trans, IPNet: ipnet}, nil
+	var zas []zoneAddr
+	for _, host := range hosts {
+		zas = append(zas, zoneAddr{Zone: dns.Fqdn(host), Port: port, Transport: trans, IPNet: ipnet})
+	}
+	return zas, nil
 }
 
 // SplitProtocolHostPort splits a full formed address like "dns://[::1]:53" into parts.

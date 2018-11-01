@@ -52,7 +52,8 @@ func NewStaticUpstream(c *caddyfile.Dispenser) (Upstream, error) {
 	if !c.Args(&upstream.from) {
 		return upstream, c.ArgErr()
 	}
-	upstream.from = plugin.Host(upstream.from).Normalize()
+	//For proxy, we can use only one domain for "From"
+	upstream.from = plugin.Host(upstream.from).Normalize()[0]
 
 	to := c.RemainingArgs()
 	if len(to) == 0 {
@@ -137,12 +138,13 @@ func parseBlock(c *caddyfile.Dispenser, u *staticUpstream) error {
 			u.HealthCheck.Interval = dur
 		}
 	case "except":
-		ignoredDomains := c.RemainingArgs()
-		if len(ignoredDomains) == 0 {
+		remainingArgs := c.RemainingArgs()
+		if len(remainingArgs) == 0 {
 			return c.ArgErr()
 		}
-		for i := 0; i < len(ignoredDomains); i++ {
-			ignoredDomains[i] = plugin.Host(ignoredDomains[i]).Normalize()
+		var ignoredDomains []string
+		for i := 0; i < len(remainingArgs); i++ {
+			ignoredDomains = append(ignoredDomains, plugin.Host(remainingArgs[i]).Normalize()...)
 		}
 		u.IgnoredSubDomains = ignoredDomains
 	case "spray":
