@@ -2,6 +2,56 @@ package dnsserver
 
 import "testing"
 
+func TestNormalizeReverseZoneWithExpansion(t *testing.T) {
+	for i, test := range []struct {
+		input     string
+		expected  []string
+		shouldErr bool
+	}{
+		{"10.6.84.129/31", []string{"dns://128.84.6.10.in-addr.arpa.:53", "dns://129.84.6.10.in-addr.arpa.:53"}, false},
+		{"172.17.17.17/12",
+			[]string{
+				"dns://16.172.in-addr.arpa.:53",
+				"dns://17.172.in-addr.arpa.:53",
+				"dns://18.172.in-addr.arpa.:53",
+				"dns://19.172.in-addr.arpa.:53",
+				"dns://20.172.in-addr.arpa.:53",
+				"dns://21.172.in-addr.arpa.:53",
+				"dns://22.172.in-addr.arpa.:53",
+				"dns://23.172.in-addr.arpa.:53",
+				"dns://24.172.in-addr.arpa.:53",
+				"dns://25.172.in-addr.arpa.:53",
+				"dns://26.172.in-addr.arpa.:53",
+				"dns://27.172.in-addr.arpa.:53",
+				"dns://28.172.in-addr.arpa.:53",
+				"dns://29.172.in-addr.arpa.:53",
+				"dns://30.172.in-addr.arpa.:53",
+				"dns://31.172.in-addr.arpa.:53",
+			}, false},
+	} {
+		hosts, err := normalizeZone(test.input)
+		var actual []string
+		for _, host := range hosts {
+			actual = append(actual, host.String())
+		}
+		if test.shouldErr && err == nil {
+			t.Errorf("Test %d: Expected error, but there wasn't any", i)
+		}
+		if !test.shouldErr && err != nil {
+			t.Errorf("Test %d: Expected no error, but there was one: %v", i, err)
+		}
+		if len(actual) != len(test.expected) {
+			t.Errorf("Test %d: Expected %d elements but %d observed", i, len(test.expected), len(actual))
+		} else {
+			for ih, host := range actual {
+				if host != test.expected[ih] {
+					t.Errorf("Test %d: Expected %s at index %d but got %s", i, test.expected[ih], ih, host)
+				}
+			}
+		}
+	}
+}
+
 func TestNormalizeZone(t *testing.T) {
 	for i, test := range []struct {
 		input     string
@@ -30,7 +80,7 @@ func TestNormalizeZone(t *testing.T) {
 		{"https://.:", "://:", true},
 	} {
 		addr, err := normalizeZone(test.input)
-		actual := addr.String()
+		actual := addr[0].String()
 		if test.shouldErr && err == nil {
 			t.Errorf("Test %d: Expected error, but there wasn't any", i)
 		}
@@ -66,7 +116,7 @@ func TestNormalizeZoneReverse(t *testing.T) {
 		{"fd00:77:30::0/110", "dns://0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.3.0.0.7.7.0.0.0.0.d.f.ip6.arpa.:53", false},
 	} {
 		addr, err := normalizeZone(test.input)
-		actual := addr.String()
+		actual := addr[0].String()
 		if test.shouldErr && err == nil {
 			t.Errorf("Test %d: Expected error, but there wasn't any", i)
 		}
